@@ -16,7 +16,6 @@ class shader
 public:
     unsigned int ID;
 
-
     shader(const char* vertexShaderPath, const char* fragmentShaderPath)
     {
         string vertexShaderCode;
