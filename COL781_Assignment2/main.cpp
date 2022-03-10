@@ -33,6 +33,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 light onlyLight(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(0.2f), glm::vec3(0.7f), glm::vec3(0.3f), 30.0f);
+//quadcopter drone("D:/OpenGL/Blender/", "shader.vert", "shader.frag");
 
 int main()
 {
@@ -129,7 +130,8 @@ int main()
 
     // load models
     // -----------
-
+    model mod("D:/OpenGL/Blender/model1.obj");
+    model mod2("D:/OpenGL/Blender/model2.obj");
 
     unsigned int lightVAO, VBO;
 
@@ -147,8 +149,6 @@ int main()
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    quadcopter drone("D:/OpenGL/Blender/", "shader.vert", "shader.frag");
 
     // render loop
     // -----------
@@ -169,13 +169,40 @@ int main()
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        ourShader.use();
+        glm::mat4 projection = glm::perspective(glm::radians(cam.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = cam.GetViewMatrix();
+        glm::mat4 model1 = glm::mat4(1.0f);
+        model1 = glm::translate(model1, glm::vec3(0.0f, 0.0f, 0.0f));
+        ourShader.setMat4("model", model1);
+        ourShader.setMat4("view", view);
+        ourShader.setMat4("projection", projection);
+        mod.Draw(ourShader, onlyLight);
+
+        model1 = glm::translate(model1, glm::vec3(-1.0f,0.1f,0.7f));
+        model1 = glm::rotate(model1, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model1 = glm::scale(model1, glm::vec3(0.2, 0.6, 0.2));
+        ourShader.setMat4("model", model1);
+        mod2.Draw(ourShader, onlyLight);
+
+        /*drone.draw(onlyLight, projection, view);*/
+
         // don't forget to enable shader before setting uniforms
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, onlyLight.position);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightShader.setMat4("model", model);
+
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
-        break;
     }
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -192,13 +219,13 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cam.ProcessKeyboard(FORWARD, deltaTime);
+        /*drone.quadCamera*/cam.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cam.ProcessKeyboard(BACKWARD, deltaTime);
+        /*drone.quadCamera*/cam.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cam.ProcessKeyboard(LEFT, deltaTime);
+        /*drone.quadCamera*/cam.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cam.ProcessKeyboard(RIGHT, deltaTime);
+        /*drone.quadCamera*/cam.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -230,12 +257,12 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastX = xpos;
     lastY = ypos;
 
-    cam.ProcessMouseMovement(xoffset, yoffset);
+    /*drone.quadCamera*/cam.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    cam.ProcessMouseScroll(static_cast<float>(yoffset));
+    /*drone.quadCamera*/cam.ProcessMouseScroll(static_cast<float>(yoffset));
 }

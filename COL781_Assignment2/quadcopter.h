@@ -35,10 +35,18 @@ public:
 			directory += '/';
 		}
 		loadDrone(directory, vertexShaderPath, fragmentShaderPath);
+		quadCamera = camera(true, glm::vec3(0.0f, 0.0f, 0.0f));
 	}
 
-	void draw(light &_light, glm::vec3 projection, glm::vec3 view) {
-		
+	void draw(light& _light, glm::mat4 projection, glm::mat4 view) {
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, quadCamera.Position);
+		drone[0][0]._shader->use();
+		drone[0][0]._shader->setMat4("model", model);
+		drone[0][0]._shader->setMat4("projection", projection);
+		drone[0][0]._shader->setMat4("view", view);
+		drone[0][0].draw(_light);
 	}
 
 private:
