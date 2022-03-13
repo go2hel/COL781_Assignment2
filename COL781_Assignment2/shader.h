@@ -11,12 +11,19 @@
 #include <iostream>
 using namespace std;
 
-class shader
+// Shader class
+class Shader
 {
 public:
+    // ID of shader
     unsigned int ID;
 
-    shader(const char* vertexShaderPath, const char* fragmentShaderPath)
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="vertexShaderPath">Path to vertex shader</param>
+    /// <param name="fragmentShaderPath">Path to fragment shader</param>
+    Shader(const char* vertexShaderPath, const char* fragmentShaderPath)
     {
         string vertexShaderCode;
         string fragmentShaderCode;
@@ -72,43 +79,24 @@ public:
         glDeleteShader(fragment);
     }
 
+    /// <summary>
+    /// Using the shader
+    /// </summary>
     void use()
     {
         glUseProgram(ID);
     }
 
-    void setInt(const string& name, int value) const
-    {
-        glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
-    }
+    // Setting uniforms in the given shaders
 
     void setFloat(const string& name, float value) const
     {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
 
-    void setVec2(const string& name, const glm::vec2& value) const
-    {
-        glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
-    }
-    void setVec2(const string& name, float x, float y) const
-    {
-        glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
-    }
-
     void setVec3(const string& name, const glm::vec3& value) const
     {
         glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
-    }
-
-    void setVec3(const string& name, float x, float y, float z) const
-    {
-        glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
-    }
-
-    void setMat3(const string& name, const glm::mat3& mat) const
-    {
-        glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
     }
 
     void setMat4(const string& name, const glm::mat4& mat) const
@@ -118,6 +106,11 @@ public:
 
 private:
 
+    /// <summary>
+    /// Checks for compilation errors
+    /// </summary>
+    /// <param name="shader"></param>
+    /// <param name="type"></param>
     void checkCompileErrors(GLuint shader, string type)
     {
         GLint success;

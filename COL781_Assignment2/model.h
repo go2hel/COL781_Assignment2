@@ -24,22 +24,22 @@ using namespace std;
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);
 
-class model
+class Model
 {
 public:
     // model data 
-    vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+    vector<Texture> textures_loaded;
     vector<Mesh>    meshes;
     string directory;
 
     // constructor, expects a filepath to a 3D model.
-    model(string const& path)
+    Model(string const& path)
     {
         loadModel(path);
     }
 
     // draws the model, and thus all its meshes
-    void Draw(shader& shader, light& light)
+    void Draw(Shader& shader, light& light)
     {
         for (unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader, light);

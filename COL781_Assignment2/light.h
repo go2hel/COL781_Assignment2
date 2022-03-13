@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 
+// Light object
 class light
 {
 public:

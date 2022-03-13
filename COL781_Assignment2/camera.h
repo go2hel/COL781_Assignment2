@@ -7,80 +7,135 @@
 
 #include <vector>
 
-// Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
+// Possible movements of camera using keys
 enum Camera_Movement {
-    FORWARD,
-    BACKWARD,
+    UP,
+    DOWN,
     LEFT,
     RIGHT
 };
 
 // Default camera values
-const float YAW = -90.0f;
+const float YAW = 0.0f;
 const float PITCH = 0.0f;
+const float ROLL = 0.0f;
 const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
 
-// An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
+// Camera object
 class camera
 {
 public:
-    // camera Attributes
+    
     glm::vec3 Position;
     glm::vec3 Front;
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
 
+    // Used for rotation speed of drone
+    vector<float> rotation;
+    vector<int> sign;
+    float lastXoffset;
+
     // euler Angles
     float Yaw;
     float Pitch;
+    float Roll;
 
     // camera options
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
 
+    // If camera is not attached then will not move
     bool attached;
 
-    // constructor with vectors
-    camera(bool isAttached = false, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    // constructor
+    camera(bool isAttached = false, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH, float roll = ROLL) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
         attached = isAttached;
         Position = position;
         WorldUp = up;
         Yaw = yaw;
         Pitch = pitch;
+        Roll = roll;
+        rotation = { 1250.0f, 1250.0f, -1250.0f, -1250.0f };
+        sign = { 1,1,-1,-1 };
         updateCameraVectors();
     }
 
-    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
+    // returns the view matrix
     glm::mat4 GetViewMatrix()
     {
         return glm::lookAt(Position, Position + Front, Up);
     }
 
-    // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
+    /// <summary>
+    /// Process keyboard input
+    /// </summary>
+    /// <param name="direction">Direction in which drone will move or roll</param>
+    /// <param name="deltaTime">For smooth movement</param>
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
         if (!attached)
             return;
 
         float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD)
-            Position += Front * velocity;
-        if (direction == BACKWARD)
-            Position -= Front * velocity;
-        if (direction == LEFT)
-            Position -= Right * velocity;
-        if (direction == RIGHT)
-            Position += Right * velocity;
+        
+        // Move drone up
+        if (direction == UP) {
+            Position += Up * velocity;
+            for (int i = 0; i < 4; i++)
+            {
+                rotation[i] += 4.0f * sign[i];
+            }
+        }
+
+        // Move drone down
+        if (direction == DOWN) {
+            Position -= Up * velocity;
+            for (int i = 0; i < 4; i++)
+            {
+                rotation[i] -= 4.0f * sign[i];
+            }
+        }
+
+        // Roll drone to the left
+        if (direction == LEFT) {
+            Roll -= 0.5f;
+            rotation[0] += 4.0f * sign[0];
+            rotation[2] += 4.0f * sign[2];
+            rotation[1] -= 4.0f * sign[1];
+            rotation[3] -= 4.0f * sign[3];
+        }
+
+        // Roll drone to the right
+        if (direction == RIGHT) {
+            Roll += 0.5f;
+            rotation[0] -= 4.0f * sign[0];
+            rotation[2] -= 4.0f * sign[2];
+            rotation[1] += 4.0f * sign[1];
+            rotation[3] += 4.0f * sign[3];
+        }
+
+        // Clamp roll values
+        if (Roll > 89.0f)
+            Roll = 89.0f;
+        if (Roll < -89.0f)
+            Roll = -89.0f;
+
+        // Update camera's local co-ordinate system
+        updateCameraVectors();
+        clampRotation();
     }
 
-    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
+    // Control camera's pitch and yaw
+    // Move mouse in left and right to control yaw
+    // Move mouse in up and down to control pitch
+    void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true)
     {
         if (!attached)
             return;
@@ -89,9 +144,41 @@ public:
         yoffset *= MouseSensitivity;
 
         Yaw += xoffset;
+        // Manage fan movements when rotating
+        if (xoffset != 0) {
+            if (xoffset > 0) {
+                rotation[0] -= 4.0f * sign[0];
+                rotation[2] += 4.0f * sign[2];
+                rotation[1] -= 4.0f * sign[1];
+                rotation[3] += 4.0f * sign[3];
+            }
+            else {
+                rotation[0] += 4.0f * sign[0];
+                rotation[2] -= 4.0f * sign[2];
+                rotation[1] += 4.0f * sign[1];
+                rotation[3] -= 4.0f * sign[3];
+            }
+        }
+
         Pitch += yoffset;
 
-        // make sure that when pitch is out of bounds, screen doesn't get flipped
+        // Manage fan movements when rotating
+        if (yoffset != 0) {
+            if (yoffset > 0) {
+                rotation[0] += 4.0f * sign[0];
+                rotation[2] -= 4.0f * sign[2];
+                rotation[1] -= 4.0f * sign[1];
+                rotation[3] += 4.0f * sign[3];
+            }
+            else {
+                rotation[0] -= 4.0f * sign[0];
+                rotation[2] += 4.0f * sign[2];
+                rotation[1] += 4.0f * sign[1];
+                rotation[3] -= 4.0f * sign[3];
+            }
+        }
+
+        // make sure that drone will not be upside down
         if (constrainPitch)
         {
             if (Pitch > 89.0f)
@@ -100,11 +187,12 @@ public:
                 Pitch = -89.0f;
         }
 
-        // update Front, Right and Up Vectors using the updated Euler angles
+        // Update camera's local co-ordinate system
         updateCameraVectors();
+        clampRotation();
     }
 
-
+    // Manage zoom of camera view
     void ProcessMouseScroll(float yoffset)
     {
         if (!attached)
@@ -119,6 +207,7 @@ public:
 
 private:
 
+    // Update camera's local co-ordinate system after processing input
     void updateCameraVectors()
     {
         glm::vec3 front;
@@ -129,6 +218,23 @@ private:
 
         Right = glm::normalize(glm::cross(Front, WorldUp));
         Up = glm::normalize(glm::cross(Right, Front));
+
+        glm::mat4 roll_mat = glm::rotate(glm::mat4(1.0f), glm::radians(Roll), Front);
+        Up = glm::mat3(roll_mat) * Up;
+        Up = glm::normalize(Up);
+    }
+
+    // Clamp rotation so that fans will not move on too high or low speeds
+    void clampRotation() {
+        for (int i = 0; i < 4; i++)
+        {
+            if (rotation[i] * sign[i] > 5000.0f) {
+                rotation[i] = 5000.0f * sign[i];
+            }
+            if (rotation[i] * sign[i] < 30.0f) {
+                rotation[i] = 30.0f * sign[i];
+            }
+        }
     }
 };
 #endif
