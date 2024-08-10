@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<TITLE>COL 781 Computer Graphics</TITLE>
+</HEAD>
+<BODY>
+
+<B><FONT SIZE=5><P ALIGN="CENTER">COL781 Computer Graphics</P>
+</B></FONT><FONT SIZE=2>
+</FONT><FONT SIZE=4><P ALIGN="CENTER">Assignment 2: Modeling of Quadcopter Drone</P>
+</FONT><B> <p align="center"> Due Date: March 11, 2022 </P>
+</B>
+<p>
+This assignment as disussed in the class aims to do modeling 
+and interactive manipulation of a quadcopter drone with the 
+following features. 
+<FONT SIZE=3>
+<ul>
+<li> The modeling of a quadcopter needs to be 
+represented as a hierarchical model with an articulated structure. The model 
+can be seen as a Directed Acyclic Graph (DAG). 
+<li> The primitives to model the Drone can be from OpenGL primitves or imported. A typical model and its parts are shown in <a href = "Assignment2-Figure1.pdf"> Figure 1.</a>
+<li> The hierarchical model defines a heirarchy where a transformation when 
+applied to a node in the DAG its sub graph inherits the transformation. 
+<li> The manipulation module will involve defining some transformation
+ of the Drone to cause translation and rotation. These manipulation may be
+done using keys of the key-board.
+<li> The motion of the Drone can be done using parameters for rotations and
+translation as shown in <a href = "Assignment2-Figure.pdf"> Figure 2. </a>
+<li> A path of the Drone can be defined through a parametric curve. 
+This path can be used for a pre-defined trajectory and motion of the Drone. In
+this mode you may not do any interactive maneuvering of the Drone. 
+<li> The camera needs to be added on the Drone, the view from this camera
+should be shown in another window.
+<li> The Drone can be put in an enclosed environment such as a room or a scene of outdoor modelled using simple primitives such as planes, boxes. The scene can also be imported.
+<li> The viewing and rendering is to be done using OpenGL. In one window the rendering should be done of the drone and its envrionment and in the second window the view of the camera on the drone. The rendering should be done using lighting and shading. 
+<li> The navigation of the Drone may be done using some heuristics to change 
+the parameters of rotations and translations as indicated in Figure 2.
+</ul>
+
+<p>
+Note: Figure 2 is taken from this <a href = "https://ieeexplore.ieee.org/abstract/document/8394860"> reference. </a>
+</HTML>
